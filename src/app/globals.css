@@ -158,3 +158,21 @@ textarea { resize: vertical; }
 .prose li { margin-bottom: 8px; }
 
 footer { margin-top: 48px; font-size: 0.9rem; color: var(--muted); }
+
+.tabs { display: flex; gap: 6px; background: var(--line); padding: 4px; border-radius: 999px; width: fit-content; }
+.tab { background: transparent; color: var(--muted); padding: 8px 18px; }
+.tab:hover:not(:disabled) { background: rgba(255,255,255,0.5); }
+.tab.on, .tab.on:hover:not(:disabled) { background: var(--card); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+
+.entries { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; margin-bottom: 14px; }
+.entry {
+  display: flex; align-items: center; gap: 10px; text-align: left;
+  background: #fff; color: var(--ink); border: 1px solid var(--line); border-radius: 10px;
+  padding: 8px; font-weight: 400;
+}
+.entry:hover:not(:disabled) { background: #fff8ea; }
+.entry.on { border-color: var(--amber); background: #fff8ea; }
+.entry img { width: 36px; height: 54px; object-fit: cover; border-radius: 4px; flex: none; }
+.entry span { display: grid; min-width: 0; }
+.entry strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.entry em { color: var(--muted); font-style: normal; font-size: 0.8rem; }

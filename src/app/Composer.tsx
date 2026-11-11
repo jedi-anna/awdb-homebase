@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { ActivityItem, Channel, Draft } from "@/lib/types";
+import type { ActivityItem, Channel, Draft, SourceId } from "@/lib/types";
 
 const LIMITS: Record<string, number> = {
   instagram: 2200, threads: 500, bluesky: 300, twitter: 280, mastodon: 500, facebook: 5000, linkedin: 3000,
@@ -22,16 +22,28 @@ async function postJson<T>(url: string, body: unknown): Promise<T> {
   return json;
 }
 
+const LABELS = {
+  untappd: { heading: "Your check-in", title: "Beer", creator: "Brewery", context: "Where (optional)", photo: "Photo link", profile: "Your Untappd profile",
+    titlePh: "e.g. 78-0", creatorPh: "e.g. 78 Brewing Company", contextPh: "e.g. Bank of America Stadium", profilePh: "https://untappd.com/user/you",
+    photoHelp: "Instagram needs a photo. On Untappd, right-click your photo and copy the image address." },
+  letterboxd: { heading: "Your review", title: "Film", creator: "Year", context: "Context (optional)", photo: "Image link", profile: "Your Letterboxd profile",
+    titlePh: "e.g. Past Lives", creatorPh: "e.g. 2023", contextPh: "e.g. a rewatch, opening night", profilePh: "https://letterboxd.com/you/",
+    photoHelp: "Instagram needs an image. The film poster fills in by default; swap in your own photo if you'd rather." },
+} as const;
+
 export default function Composer() {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [channelError, setChannelError] = useState<string | null>(null);
 
+  const [source, setSource] = useState<SourceId>("untappd");
   const [link, setLink] = useState("");
+  const [lbUser, setLbUser] = useState("");
+  const [entries, setEntries] = useState<(ActivityItem & { label: string })[]>([]);
   const [item, setItem] = useState<ActivityItem>({ source: "untappd", title: "", profileUrl: "", ratingMax: 5 });
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [results, setResults] = useState<Result[]>([]);
-  const [busy, setBusy] = useState<null | "preview" | "drafts" | "send">(null);
+  const [busy, setBusy] = useState<null | "preview" | "feed" | "drafts" | "send">(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -73,6 +85,39 @@ export default function Composer() {
     }
   }
 
+  function switchSource(next: SourceId) {
+    if (next === source) return;
+    setSource(next);
+    setEntries([]);
+    setError(null);
+    setItem({ source: next, title: "", profileUrl: "", ratingMax: 5 });
+    setDrafts([]);
+    setResults([]);
+  }
+
+  async function loadLetterboxd() {
+    setBusy("feed");
+    setError(null);
+    try {
+      const { entries } = await postJson<{ entries: (ActivityItem & { label: string })[] }>("/api/letterboxd/feed", { username: lbUser });
+      setEntries(entries);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  function pickEntry(entry: ActivityItem & { label: string }) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { label, ...rest } = entry;
+    setItem(rest);
+    setDrafts([]);
+    setResults([]);
+  }
+
+  const L = LABELS[source];
+
   const chosen = useMemo(() => channels.filter((c) => selected.has(c.id)), [channels, selected]);
 
   async function makeDrafts() {
@@ -107,44 +152,85 @@ export default function Composer() {
 
   return (
     <div className="composer">
+      <div className="tabs" role="tablist">
+        {(["untappd", "letterboxd"] as const).map((id) => (
+          <button key={id} role="tab" aria-selected={source === id} className={source === id ? "tab on" : "tab"} onClick={() => switchSource(id)}>
+            {id === "untappd" ? "Untappd" : "Letterboxd"}
+          </button>
+        ))}
+      </div>
+
       <section className="card">
-        <h2><span className="step">1</span> Your check-in</h2>
-        <label className="field">
-          <span>Untappd check-in link</span>
-          <div className="row">
-            <input
-              type="url"
-              placeholder="https://untappd.com/user/you/checkin/123456789"
-              value={link}
-              onChange={(e) => setLink(e.target.value)}
-            />
-            <button className="secondary" onClick={fillFromLink} disabled={!link || busy !== null}>
-              {busy === "preview" ? "Reading…" : "Fill in"}
-            </button>
+        <h2><span className="step">1</span> {L.heading}</h2>
+        {source === "untappd" ? (
+          <label className="field">
+            <span>Untappd check-in link</span>
+            <div className="row">
+              <input
+                type="url"
+                placeholder="https://untappd.com/user/you/checkin/123456789"
+                value={link}
+                onChange={(e) => setLink(e.target.value)}
+              />
+              <button className="secondary" onClick={fillFromLink} disabled={!link || busy !== null}>
+                {busy === "preview" ? "Reading…" : "Fill in"}
+              </button>
+            </div>
+            <small>We read the link preview to fill in what we can. Edit anything below.</small>
+          </label>
+        ) : (
+          <div className="field">
+            <label className="field">
+              <span>Letterboxd username</span>
+              <div className="row">
+                <input placeholder="e.g. annabiondi" value={lbUser} onChange={(e) => setLbUser(e.target.value)} />
+                <button className="secondary" onClick={loadLetterboxd} disabled={!lbUser || busy !== null}>
+                  {busy === "feed" ? "Loading…" : "Load diary"}
+                </button>
+              </div>
+              <small>Reads your public Letterboxd feed. Pick an entry to fill in the form.</small>
+            </label>
+            {entries.length > 0 && (
+              <div className="entries">
+                {entries.slice(0, 12).map((e) => (
+                  <button
+                    key={e.itemUrl ?? e.title}
+                    className={item.itemUrl === e.itemUrl ? "entry on" : "entry"}
+                    onClick={() => pickEntry(e)}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    {e.imageUrl && <img src={e.imageUrl} alt="" />}
+                    <span>
+                      <strong>{e.title}</strong>
+                      <em>{[e.creator, e.rating != null ? `${e.rating}/5` : null, e.label].filter(Boolean).join(" · ")}</em>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-          <small>We read the link preview to fill in what we can. Edit anything below.</small>
-        </label>
+        )}
 
         <div className="grid">
           <label className="field">
-            <span>Beer</span>
-            <input value={item.title} onChange={(e) => update({ title: e.target.value })} placeholder="e.g. 78-0" />
+            <span>{L.title}</span>
+            <input value={item.title} onChange={(e) => update({ title: e.target.value })} placeholder={L.titlePh} />
           </label>
           <label className="field">
-            <span>Brewery</span>
-            <input value={item.creator ?? ""} onChange={(e) => update({ creator: e.target.value })} placeholder="e.g. 78 Brewing Company" />
+            <span>{L.creator}</span>
+            <input value={item.creator ?? ""} onChange={(e) => update({ creator: e.target.value })} placeholder={L.creatorPh} />
           </label>
           <label className="field">
             <span>Your rating (out of 5)</span>
             <input
-              type="number" min={0} max={5} step={0.25}
+              type="number" min={0} max={5} step={source === "letterboxd" ? 0.5 : 0.25}
               value={item.rating ?? ""}
               onChange={(e) => update({ rating: e.target.value === "" ? undefined : Number(e.target.value) })}
             />
           </label>
           <label className="field">
-            <span>Where (optional)</span>
-            <input value={item.context ?? ""} onChange={(e) => update({ context: e.target.value })} placeholder="e.g. Bank of America Stadium" />
+            <span>{L.context}</span>
+            <input value={item.context ?? ""} onChange={(e) => update({ context: e.target.value })} placeholder={L.contextPh} />
           </label>
         </div>
 
@@ -160,18 +246,18 @@ export default function Composer() {
 
         <div className="grid">
           <label className="field">
-            <span>Photo link</span>
+            <span>{L.photo}</span>
             <input type="url" value={item.imageUrl ?? ""} onChange={(e) => update({ imageUrl: e.target.value || undefined })} placeholder="https://…" />
-            <small>Instagram needs a photo. On Untappd, right-click your photo and copy the image address.</small>
+            <small>{L.photoHelp}</small>
           </label>
           <label className="field">
-            <span>Your Untappd profile</span>
-            <input type="url" value={item.profileUrl} onChange={(e) => update({ profileUrl: e.target.value })} placeholder="https://untappd.com/user/you" />
+            <span>{L.profile}</span>
+            <input type="url" value={item.profileUrl} onChange={(e) => update({ profileUrl: e.target.value })} placeholder={L.profilePh} />
           </label>
         </div>
         {item.imageUrl && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img className="photo" src={item.imageUrl} alt={`Photo of ${item.title || "the beer"}`} />
+          <img className="photo" src={item.imageUrl} alt={item.title ? `Image for ${item.title}` : "Selected image"} />
         )}
       </section>
 

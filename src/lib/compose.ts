@@ -92,10 +92,17 @@ export function assemble(item: ActivityItem, service: string, framing: Framing):
 }
 
 function fallbackFraming(item: ActivityItem): Framing {
+  if (item.source === "letterboxd") {
+    const film = item.creator ? `${item.title} (${item.creator})` : item.title;
+    return {
+      hook: `Just watched ${film}${item.context ? `, ${item.context}` : ""}.`,
+      closer: "",
+      hashtags: ["letterboxd", "film", "moviereview"],
+    };
+  }
   const what = item.creator ? `${item.title} by ${item.creator}` : item.title;
-  const verb = item.source === "untappd" ? "Just had" : "Just watched";
   return {
-    hook: `${verb} ${what}${item.context ? ` at ${item.context}` : ""}.`,
+    hook: `Just had ${what}${item.context ? ` at ${item.context}` : ""}.`,
     closer: "",
     hashtags: item.source === "untappd" ? ["craftbeer", "untappd"] : ["letterboxd", "film"],
   };
@@ -118,7 +125,7 @@ ${JSON.stringify(
   {
     platform: SOURCE_NAMES[item.source],
     title: item.title,
-    creator: item.creator,
+    [item.source === "letterboxd" ? "release_year" : "maker"]: item.creator,
     context: item.context,
     rating: item.rating != null ? `${item.rating}/${item.ratingMax ?? 5}` : undefined,
     reviewer_notes_for_tone_only: item.notes,

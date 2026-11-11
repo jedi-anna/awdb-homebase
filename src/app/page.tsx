@@ -28,16 +28,16 @@ export default async function Home({
 
       {!connected ? (
         <section className="hero">
-          <h1>Your reviews live on Untappd. Your audience doesn&apos;t.</h1>
+          <h1>Your reviews live on Untappd and Letterboxd. Your audience doesn&apos;t.</h1>
           <p>
-            Turn check-ins into native posts for Instagram, Threads and Bluesky, queued in Buffer as drafts.
+            Turn check-ins and reviews into native posts for Instagram, Threads and Bluesky, queued in Buffer as drafts.
             Every post points people back to your profile, so the community you built there keeps growing.
           </p>
           <a className="button" href="/api/auth/login">Connect Buffer</a>
           <ul className="points">
             <li><strong>Your words stay yours.</strong> Notes and ratings are posted exactly as you wrote them.</li>
             <li><strong>Nothing auto-posts.</strong> Everything lands in Buffer as a draft for you to approve.</li>
-            <li><strong>Built for niche platforms.</strong> Untappd today, Letterboxd next.</li>
+            <li><strong>Built for niche platforms.</strong> Untappd and Letterboxd today, with more to come.</li>
           </ul>
           {error && <p className="error">{error}</p>}
         </section>

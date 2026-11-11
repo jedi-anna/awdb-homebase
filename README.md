@@ -13,7 +13,9 @@ People build real reputations on vertical platforms like Untappd, Letterboxd and
 ## How it works
 
 1. **Connect Buffer** with OAuth.
-2. **Paste an Untappd check-in link.** Home Base reads the link preview and fills in the beer, brewery and photo. Add your rating and notes.
+2. **Pick a source.**
+   - **Untappd:** paste a check-in link. Home Base fills in the beer, brewery, photo and rating from the page.
+   - **Letterboxd:** enter your username. Home Base reads your public diary feed, and you pick an entry.
 3. **Pick channels.** Home Base writes a draft for each one, sized to its character limit and written in its voice.
 4. **Review and send.** Drafts land in your Buffer queue. Nothing posts automatically.
 
@@ -24,9 +26,12 @@ People build real reputations on vertical platforms like Untappd, Letterboxd and
 - **Minimum permissions.** The app requests `account:read`, `posts:read`, `posts:write` and `offline_access`, nothing else.
 - **One shape for every source.** Each platform adapter converts activity into a single `ActivityItem` type (`src/lib/types.ts`). Everything downstream ignores where the data came from, so adding Letterboxd or Goodreads means writing one adapter.
 
-## Why Untappd first
+## Two very different sources
 
-Untappd's API has been closed to new applications for years. Home Base works anyway, from a link the user already has. If the pattern works without an API, it works anywhere.
+- **Untappd** has no open API: it has been closed to new applications for years. Home Base works anyway, from a check-in link the user already has.
+- **Letterboxd** publishes a public RSS feed for every member, so Home Base reads it directly.
+
+Both adapters output the same `ActivityItem`, and the rest of the app doesn't know the difference. That's the point: if the pattern works with and without an API, it works for any niche platform.
 
 ## Run it locally
 
@@ -46,7 +51,6 @@ Next.js (App Router) on Vercel, Buffer GraphQL API, Claude API. No database: the
 
 ## Roadmap
 
-- Letterboxd adapter via public RSS
 - Photo upload instead of pasting an image link
 - Metrics view: which post formats send the most people back to your profile
 - More sources: Goodreads, Strava, Etsy
