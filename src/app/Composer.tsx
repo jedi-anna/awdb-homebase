@@ -24,10 +24,10 @@ async function postJson<T>(url: string, body: unknown): Promise<T> {
 
 const LABELS = {
   untappd: { heading: "Your check-in", title: "Beer", creator: "Brewery", context: "Where (optional)", photo: "Photo link", profile: "Your Untappd profile",
-    titlePh: "e.g. 78-0", creatorPh: "e.g. 78 Brewing Company", contextPh: "e.g. Bank of America Stadium", profilePh: "https://untappd.com/user/you",
+    titlePh: "e.g. Miller Lite", creatorPh: "e.g. Miller Brewing Company", contextPh: "e.g. your local bar", profilePh: "https://untappd.com/user/you",
     photoHelp: "Instagram needs a photo. On Untappd, right-click your photo and copy the image address." },
   letterboxd: { heading: "Your review", title: "Film", creator: "Year", context: "Context (optional)", photo: "Image link", profile: "Your Letterboxd profile",
-    titlePh: "e.g. Past Lives", creatorPh: "e.g. 2023", contextPh: "e.g. a rewatch, opening night", profilePh: "https://letterboxd.com/you/",
+    titlePh: "e.g. The Godfather", creatorPh: "e.g. 1972", contextPh: "e.g. a rewatch, opening night", profilePh: "https://letterboxd.com/you/",
     photoHelp: "Instagram needs an image. The film poster fills in by default; swap in your own photo if you'd rather." },
 } as const;
 
@@ -185,7 +185,7 @@ export default function Composer() {
             <label className="field">
               <span>Letterboxd username</span>
               <div className="row">
-                <input placeholder="e.g. annabiondi" value={lbUser} onChange={(e) => setLbUser(e.target.value)} />
+                <input placeholder="e.g. yourusername" value={lbUser} onChange={(e) => setLbUser(e.target.value)} />
                 <button className="secondary" onClick={loadLetterboxd} disabled={!lbUser || busy !== null}>
                   {busy === "feed" ? "Loading…" : "Load diary"}
                 </button>
@@ -264,7 +264,7 @@ export default function Composer() {
             onChange={(e) =>
               update({ mentions: e.target.value.split(/[\s,]+/).map((h) => h.replace(/^@/, "")).filter(Boolean) })
             }
-            placeholder={source === "untappd" ? "@brewery @untappd" : "@a24 @letterboxd"}
+            placeholder={source === "untappd" ? "@millerlite @untappd" : "@studio @letterboxd"}
           />
           <small>
             Tagged in the caption on Instagram and Threads, and on the photo on Instagram so the post shows up on their
