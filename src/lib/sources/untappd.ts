@@ -90,7 +90,12 @@ function findComment(html: string): string | undefined {
   // <p class="comment"><abbr id="translate_...">the review</abbr></p>
   const m = html.match(/<p[^>]*class=["'](?:[^"']*\s)?comment(?:-text)?(?:\s[^"']*)?["'][^>]*>([\s\S]*?)<\/p>/i);
   if (!m) return undefined;
-  const text = decodeEntities(m[1].replace(/<[^>]+>/g, "")).replace(/\s+/g, " ").trim();
+  // The review sits in an <abbr id="translate_..."> next to a "Translate" link; take only the review.
+  const inner = m[1].match(/<abbr[^>]*id=["']translate_[^"']*["'][^>]*>([\s\S]*?)<\/abbr>/i)?.[1] ?? m[1];
+  const text = decodeEntities(inner.replace(/<[^>]+>/g, ""))
+    .replace(/\s+/g, " ")
+    .replace(/\s*Translate$/i, "")
+    .trim();
   return text || undefined;
 }
 

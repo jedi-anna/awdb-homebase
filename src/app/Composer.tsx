@@ -55,6 +55,31 @@ function defaultScheduleValue() {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+// Each source remembers which channels it posts to (in this browser), so beer
+// can go to one account and film to another without re-picking every time.
+const channelPrefKey = (source: SourceId) => `epl:channels:${source}`;
+
+function loadChannelPref(source: SourceId, channels: Channel[]): Set<string> {
+  try {
+    const saved = JSON.parse(localStorage.getItem(channelPrefKey(source)) ?? "null");
+    if (Array.isArray(saved)) {
+      const valid = saved.filter((id: string) => channels.some((c) => c.id === id));
+      if (valid.length) return new Set(valid);
+    }
+  } catch {
+    // Storage unavailable or corrupt: fall back to the default.
+  }
+  return new Set(channels.filter((c) => !c.isQueuePaused).map((c) => c.id));
+}
+
+function saveChannelPref(source: SourceId, ids: Set<string>) {
+  try {
+    localStorage.setItem(channelPrefKey(source), JSON.stringify([...ids]));
+  } catch {
+    // Not critical.
+  }
+}
+
 export default function Composer() {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -79,7 +104,7 @@ export default function Composer() {
       .then((d) => {
         if (d.error) throw new Error(d.error);
         setChannels(d.channels);
-        setSelected(new Set(d.channels.filter((c: Channel) => !c.isQueuePaused).map((c: Channel) => c.id)));
+        setSelected(loadChannelPref("untappd", d.channels));
       })
       .catch((e) => setChannelError(e.message));
   }, []);
@@ -117,6 +142,7 @@ export default function Composer() {
   function switchSource(next: SourceId) {
     if (next === source) return;
     setSource(next);
+    setSelected(loadChannelPref(next, channels));
     setEntries([]);
     setError(null);
     setItem({ source: next, title: "", profileUrl: "", ratingMax: 5, mentions: [next] });
@@ -329,6 +355,7 @@ export default function Composer() {
                   if (next.has(c.id)) next.delete(c.id);
                   else next.add(c.id);
                   setSelected(next);
+                  saveChannelPref(source, next);
                   setDrafts([]);
                 }}
               />
