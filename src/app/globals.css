@@ -106,7 +106,7 @@ button.link {
 .field small { color: var(--muted); }
 .row { display: flex; gap: 8px; }
 .row input { flex: 1; }
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; align-items: start; }
 @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
 
 input, textarea {

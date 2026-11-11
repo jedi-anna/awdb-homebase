@@ -126,11 +126,11 @@ export default function Composer() {
         <div className="grid">
           <label className="field">
             <span>Beer</span>
-            <input value={item.title} onChange={(e) => update({ title: e.target.value })} placeholder="78-0" />
+            <input value={item.title} onChange={(e) => update({ title: e.target.value })} placeholder="e.g. 78-0" />
           </label>
           <label className="field">
             <span>Brewery</span>
-            <input value={item.creator ?? ""} onChange={(e) => update({ creator: e.target.value })} placeholder="78 Brewing Company" />
+            <input value={item.creator ?? ""} onChange={(e) => update({ creator: e.target.value })} placeholder="e.g. 78 Brewing Company" />
           </label>
           <label className="field">
             <span>Your rating (out of 5)</span>
@@ -142,7 +142,7 @@ export default function Composer() {
           </label>
           <label className="field">
             <span>Where (optional)</span>
-            <input value={item.context ?? ""} onChange={(e) => update({ context: e.target.value })} placeholder="Bank of America Stadium" />
+            <input value={item.context ?? ""} onChange={(e) => update({ context: e.target.value })} placeholder="e.g. Bank of America Stadium" />
           </label>
         </div>
 
