@@ -16,8 +16,9 @@ People build real reputations on vertical platforms like Untappd, Letterboxd and
 2. **Pick a source.**
    - **Untappd:** paste a check-in link. Home Base fills in the beer, brewery, photo and rating from the page.
    - **Letterboxd:** enter your username. Home Base reads your public diary feed, and you pick an entry.
-3. **Pick channels.** Home Base writes a draft for each one, sized to its character limit and written in its voice.
-4. **Review and send.** Drafts land in your Buffer queue. Nothing posts automatically.
+3. **Tag the people behind it.** Home Base suggests tags (the brewery's Instagram, found on its Untappd page, plus @untappd or @letterboxd). Tags go in the caption on Instagram and Threads and on the photo on Instagram, so the post also appears on the brewery's Tagged tab. Handles are never guessed.
+4. **Pick channels.** Home Base writes a draft for each one, sized to its character limit and written in its voice.
+5. **Review and send.** Drafts land in your Buffer queue. Nothing posts automatically.
 
 ## Product principles
 
@@ -53,4 +54,5 @@ Next.js (App Router) on Vercel, Buffer GraphQL API, Claude API. No database: the
 
 - Photo upload instead of pasting an image link
 - Metrics view: which post formats send the most people back to your profile
-- More sources: Goodreads, Strava, Etsy
+- More sources: Goodreads, Strava
+- Marketplaces: turn listings on Etsy, Depop, Poshmark or Reverb into posts that send buyers to your shop

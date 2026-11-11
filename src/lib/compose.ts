@@ -19,6 +19,14 @@ const RULES: Record<string, ChannelRules> = {
   linkedin: { label: "LinkedIn", limit: 3000, linksClickable: true, needsImage: false },
 };
 
+/** Services where an @handle in the text links to the same Instagram-style account. */
+const MENTION_SERVICES = new Set(["instagram", "threads"]);
+
+export function cleanHandle(raw: string): string | null {
+  const h = raw.trim().replace(/^@/, "").replace(/^https?:\/\/(www\.)?instagram\.com\//i, "").replace(/\/.*$/, "");
+  return /^[A-Za-z0-9._]{1,30}$/.test(h) ? h.toLowerCase() : null;
+}
+
 export function rulesFor(service: string): ChannelRules {
   return RULES[service] ?? { label: service, limit: 500, linksClickable: true, needsImage: false };
 }
@@ -68,10 +76,14 @@ export function assemble(item: ActivityItem, service: string, framing: Framing):
   const rating = ratingLine(item);
   const cta = ctaLine(item, rules);
   let { hook, closer } = framing;
+  const handles = MENTION_SERVICES.has(service)
+    ? [...new Set((item.mentions ?? []).map(cleanHandle).filter((h): h is string => Boolean(h)))]
+    : [];
+  const mentionLine = handles.length ? handles.map((h) => `@${h}`).join(" ") : "";
   let tags = framing.hashtags.map((t) => `#${t.replace(/^#/, "").replace(/\s+/g, "")}`).join(" ");
 
   const build = (n: string | null) =>
-    [hook, [n, rating].filter(Boolean).join("\n"), closer, cta, tags]
+    [hook, [n, rating].filter(Boolean).join("\n"), closer, cta, [mentionLine, tags].filter(Boolean).join("\n")]
       .filter((part) => part && part.trim())
       .join("\n\n");
 
@@ -179,6 +191,11 @@ export async function generateDrafts(item: ActivityItem, channels: Channel[]): P
       service: channel.service,
       text: assemble(item, channel.service, framing),
       imageUrl: item.imageUrl,
+      userTags:
+        channel.service === "instagram"
+          ? [...new Set((item.mentions ?? []).map(cleanHandle).filter((h): h is string => Boolean(h)))]
+          : undefined,
+      altText: [item.title, item.creator].filter(Boolean).join(", "),
     };
   });
 }

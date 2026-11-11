@@ -151,6 +151,26 @@ export async function listChannels(token: string): Promise<Channel[]> {
   return perOrg.flat();
 }
 
+/**
+ * Instagram photo tags sit on the image asset. Positions are fractions of the
+ * image size; tags are spread along the bottom so they don't cover the photo.
+ */
+function imageAsset(draft: Draft) {
+  const image: Record<string, unknown> = { url: draft.imageUrl };
+  const handles = draft.service === "instagram" ? draft.userTags ?? [] : [];
+  if (handles.length) {
+    image.metadata = {
+      altText: draft.altText ?? "Photo",
+      userTags: handles.map((handle, i) => ({
+        handle,
+        x: Number(((i + 1) / (handles.length + 1)).toFixed(3)),
+        y: 0.9,
+      })),
+    };
+  }
+  return image;
+}
+
 const CREATE_POST = `
   mutation CreatePost($input: CreatePostInput!) {
     createPost(input: $input) {
@@ -169,7 +189,7 @@ export async function createDraft(token: string, draft: Draft): Promise<string> 
     schedulingType: "automatic",
     saveToDraft: true,
     source: "homebase",
-    assets: draft.imageUrl ? [{ image: { url: draft.imageUrl } }] : [],
+    assets: draft.imageUrl ? [{ image: imageAsset(draft) }] : [],
   };
 
   if (draft.service === "instagram") {

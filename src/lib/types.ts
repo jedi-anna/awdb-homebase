@@ -21,6 +21,8 @@ export interface ActivityItem {
   profileUrl: string;
   /** Optional extras, e.g. where the beer was had. */
   context?: string;
+  /** Instagram/Threads handles to tag, without the @ (e.g. the brewery and the platform). */
+  mentions?: string[];
 }
 
 export interface Channel {
@@ -37,4 +39,7 @@ export interface Draft {
   service: string;
   text: string;
   imageUrl?: string;
+  /** Instagram photo tags: handles shown on the image and in their Tagged tab. */
+  userTags?: string[];
+  altText?: string;
 }

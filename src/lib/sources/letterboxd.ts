@@ -86,6 +86,7 @@ export async function fetchLetterboxdEntries(username: string): Promise<Letterbo
       itemUrl: tag(item, "link"),
       profileUrl: profileUrlFor(name),
       context: rewatch ? "a rewatch" : undefined,
+      mentions: ["letterboxd"],
       label: [watchedLabel && `Watched ${watchedLabel}`, review ? "reviewed" : null].filter(Boolean).join(" · "),
     });
   }

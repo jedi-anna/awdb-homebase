@@ -40,7 +40,7 @@ export default function Composer() {
   const [link, setLink] = useState("");
   const [lbUser, setLbUser] = useState("");
   const [entries, setEntries] = useState<(ActivityItem & { label: string })[]>([]);
-  const [item, setItem] = useState<ActivityItem>({ source: "untappd", title: "", profileUrl: "", ratingMax: 5 });
+  const [item, setItem] = useState<ActivityItem>({ source: "untappd", title: "", profileUrl: "", ratingMax: 5, mentions: ["untappd"] });
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [results, setResults] = useState<Result[]>([]);
   const [busy, setBusy] = useState<null | "preview" | "feed" | "drafts" | "send">(null);
@@ -77,6 +77,7 @@ export default function Composer() {
         notes: item.notes?.trim() ? item.notes : preview.notes,
         itemUrl: preview.itemUrl,
         profileUrl: preview.profileUrl ?? item.profileUrl,
+        mentions: preview.mentions?.length ? preview.mentions : item.mentions,
       });
     } catch (e) {
       setError((e as Error).message);
@@ -90,7 +91,7 @@ export default function Composer() {
     setSource(next);
     setEntries([]);
     setError(null);
-    setItem({ source: next, title: "", profileUrl: "", ratingMax: 5 });
+    setItem({ source: next, title: "", profileUrl: "", ratingMax: 5, mentions: [next] });
     setDrafts([]);
     setResults([]);
   }
@@ -255,6 +256,22 @@ export default function Composer() {
             <input type="url" value={item.profileUrl} onChange={(e) => update({ profileUrl: e.target.value })} placeholder={L.profilePh} />
           </label>
         </div>
+        <label className="field">
+          <span>Tag accounts</span>
+          <input
+            value={(item.mentions ?? []).map((h) => `@${h}`).join(" ")}
+            onChange={(e) =>
+              update({ mentions: e.target.value.split(/[\s,]+/).map((h) => h.replace(/^@/, "")).filter(Boolean) })
+            }
+            placeholder={source === "untappd" ? "@brewery @untappd" : "@a24 @letterboxd"}
+          />
+          <small>
+            Tagged in the caption on Instagram and Threads, and on the photo on Instagram so the post shows up on their
+            profile. {source === "untappd" ? "We fill in the brewery when Untappd lists its Instagram. " : ""}Double-check
+            handles: a wrong tag points people to a stranger.
+          </small>
+        </label>
+
         {item.imageUrl && (
           // eslint-disable-next-line @next/next/no-img-element
           <img className="photo" src={item.imageUrl} alt={item.title ? `Image for ${item.title}` : "Selected image"} />
@@ -318,6 +335,9 @@ export default function Composer() {
                     setDrafts(next);
                   }}
                 />
+                {d.service === "instagram" && d.userTags && d.userTags.length > 0 && (
+                  <p className="muted small">Photo tags: {d.userTags.map((h) => `@${h}`).join(" ")}</p>
+                )}
                 {missingPhoto && <p className="error">Instagram needs a photo. Add a photo link above.</p>}
                 {result && (result.ok ? <p className="ok">Saved as a draft in Buffer.</p> : <p className="error">{result.error}</p>)}
               </div>

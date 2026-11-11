@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createDraft, getAccessToken } from "@/lib/buffer";
-import { rulesFor } from "@/lib/compose";
+import { cleanHandle, rulesFor } from "@/lib/compose";
 import type { Draft } from "@/lib/types";
 
 export async function POST(req: NextRequest) {
@@ -22,8 +22,9 @@ export async function POST(req: NextRequest) {
       if (rules.needsImage && !draft.imageUrl) {
         return { channelId: draft.channelId, ok: false, error: `${rules.label} posts need a photo.` };
       }
+      const userTags = (draft.userTags ?? []).map(cleanHandle).filter((h): h is string => Boolean(h)).slice(0, 20);
       try {
-        const postId = await createDraft(token, draft);
+        const postId = await createDraft(token, { ...draft, userTags });
         return { channelId: draft.channelId, ok: true, postId };
       } catch (err) {
         return { channelId: draft.channelId, ok: false, error: (err as Error).message };

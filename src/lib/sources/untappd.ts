@@ -10,6 +10,7 @@ export interface UntappdPreview {
   imageUrl?: string;
   rating?: number;
   notes?: string;
+  mentions?: string[];
   itemUrl: string;
   profileUrl?: string;
 }
@@ -87,6 +88,35 @@ function findComment(html: string): string | undefined {
   return text || undefined;
 }
 
+const NOT_HANDLES = new Set(["p", "reel", "reels", "explore", "accounts", "stories", "untappd", "sharer"]);
+
+/**
+ * Follows the brewery link on the check-in page and looks for an Instagram
+ * link on the brewery's Untappd page. Returns a handle only when one is
+ * clearly listed; we never guess handles.
+ */
+async function findBreweryInstagram(html: string, breweryName: string): Promise<string | undefined> {
+  const name = breweryName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const link = html.match(new RegExp(`href=["'](/[^"'#?]+)["'][^>]*>\\s*${name}\\s*</a>`, "i"))?.[1];
+  if (!link || link.includes("..")) return undefined;
+  try {
+    const res = await fetch(new URL(link, "https://untappd.com"), {
+      headers: { "User-Agent": "HomeBase/0.1 (link preview)", Accept: "text/html" },
+      cache: "no-store",
+      signal: AbortSignal.timeout(6000),
+    });
+    if (!res.ok) return undefined;
+    const page = await res.text();
+    for (const m of page.matchAll(/instagram\.com\/([A-Za-z0-9._]{1,30})/gi)) {
+      const handle = m[1].replace(/\.$/, "").toLowerCase();
+      if (!NOT_HANDLES.has(handle)) return handle;
+    }
+  } catch {
+    // Best effort only.
+  }
+  return undefined;
+}
+
 export async function fetchUntappdPreview(raw: string): Promise<UntappdPreview> {
   const parsed = parseUntappdUrl(raw);
   if (!parsed) throw new Error("That doesn't look like an untappd.com link.");
@@ -120,6 +150,9 @@ export async function fetchUntappdPreview(raw: string): Promise<UntappdPreview> 
 
     const comment = findComment(html);
     if (comment) preview.notes = comment;
+
+    const brewery = preview.creator ? await findBreweryInstagram(html, preview.creator) : undefined;
+    preview.mentions = [brewery, "untappd"].filter((h): h is string => Boolean(h));
   } catch {
     // Network or parsing failure: return what we got from the URL alone.
   }

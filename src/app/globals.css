@@ -176,3 +176,4 @@ footer { margin-top: 48px; font-size: 0.9rem; color: var(--muted); }
 .entry span { display: grid; min-width: 0; }
 .entry strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .entry em { color: var(--muted); font-style: normal; font-size: 0.8rem; }
+.small { font-size: 0.85rem; margin: 6px 0 0; }
