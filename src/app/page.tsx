@@ -1,69 +1,56 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import Composer from "./Composer";
+import { getSession } from "@/lib/session";
 
-export default function Home() {
+// Depends on the visitor's session cookie, so render per request.
+export const instant = false;
+
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error } = await searchParams;
+  // Server Components can't write cookies, so token refresh happens in the API routes.
+  const connected = Boolean((await getSession()).accessToken);
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>
-            To get started, edit the{" "}
-            <code className={styles.code}>page.tsx</code> file.
-          </h1>
+    <main>
+      <header className="top">
+        <div className="brand">
+          <span className="mark" aria-hidden>⌂</span> Home Base
+        </div>
+        {connected && (
+          <form action="/api/auth/logout" method="post">
+            <button className="link">Disconnect Buffer</button>
+          </form>
+        )}
+      </header>
+
+      {!connected ? (
+        <section className="hero">
+          <h1>Your reviews live on Untappd. Your audience doesn&apos;t.</h1>
           <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
+            Turn check-ins into native posts for Instagram, Threads and Bluesky, queued in Buffer as drafts.
+            Every post points people back to your profile, so the community you built there keeps growing.
           </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+          <a className="button" href="/api/auth/login">Connect Buffer</a>
+          <ul className="points">
+            <li><strong>Your words stay yours.</strong> Notes and ratings are posted exactly as you wrote them.</li>
+            <li><strong>Nothing auto-posts.</strong> Everything lands in Buffer as a draft for you to approve.</li>
+            <li><strong>Built for niche platforms.</strong> Untappd today, Letterboxd next.</li>
+          </ul>
+          {error && <p className="error">{error}</p>}
+        </section>
+      ) : (
+        <>
+          {error && <p className="error banner">{error}</p>}
+          <Composer />
+        </>
+      )}
+
+      <footer>
+        <a href="/privacy">Privacy</a>
+      </footer>
+    </main>
   );
 }
