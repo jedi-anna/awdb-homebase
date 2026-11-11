@@ -1,8 +1,8 @@
-# Home Base
+# External Post Launch
 
 **Your reviews live on Untappd. Your audience doesn't.**
 
-Home Base turns activity on niche platforms into native posts for mainstream social, saved to your Buffer queue as drafts. Every post sends people back to your profile on the platform where your community actually lives.
+External Post Launch turns activity on niche platforms into native posts for mainstream social, saved to your Buffer queue as drafts. Every post sends people back to your profile on the platform where your community actually lives.
 
 Built for [Buffer Commit 2026](https://buffer.com/api/commit).
 
@@ -14,10 +14,10 @@ People build real reputations on vertical platforms like Untappd, Letterboxd and
 
 1. **Connect Buffer** with OAuth.
 2. **Pick a source.**
-   - **Untappd:** paste a check-in link. Home Base fills in the beer, brewery, photo and rating from the page.
-   - **Letterboxd:** enter your username. Home Base reads your public diary feed, and you pick an entry.
-3. **Tag the people behind it.** Home Base suggests tags (the brewery's Instagram, found on its Untappd page, plus @untappd or @letterboxd). Tags go in the caption on Instagram and Threads and on the photo on Instagram, so the post also appears on the brewery's Tagged tab. Handles are never guessed.
-4. **Pick channels.** Home Base writes a draft for each one, sized to its character limit and written in its voice.
+   - **Untappd:** paste a check-in link. External Post Launch fills in the beer, brewery, photo and rating from the page.
+   - **Letterboxd:** enter your username. External Post Launch reads your public diary feed, and you pick an entry.
+3. **Tag the people behind it.** External Post Launch suggests tags (the brewery's Instagram, found on its Untappd page, plus @untappd or @letterboxd). Tags go in the caption on Instagram and Threads and on the photo on Instagram, so the post also appears on the brewery's Tagged tab. Handles are never guessed.
+4. **Pick channels.** External Post Launch writes a draft for each one, sized to its character limit and written in its voice.
 5. **Review and send.** Drafts land in your Buffer queue. Nothing posts automatically.
 
 ## Product principles
@@ -29,8 +29,8 @@ People build real reputations on vertical platforms like Untappd, Letterboxd and
 
 ## Two very different sources
 
-- **Untappd** has no open API: it has been closed to new applications for years. Home Base works anyway, from a check-in link the user already has.
-- **Letterboxd** publishes a public RSS feed for every member, so Home Base reads it directly.
+- **Untappd** has no open API: it has been closed to new applications for years. External Post Launch works anyway, from a check-in link the user already has.
+- **Letterboxd** publishes a public RSS feed for every member, so External Post Launch reads it directly.
 
 Both adapters output the same `ActivityItem`, and the rest of the app doesn't know the difference. That's the point: if the pattern works with and without an API, it works for any niche platform.
 

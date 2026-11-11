@@ -1,12 +1,12 @@
 import Link from "next/link";
 
-export const metadata = { title: "Privacy · Home Base" };
+export const metadata = { title: "Privacy · External Post Launch" };
 
 export default function Privacy() {
   return (
     <main className="prose">
       <h1>Privacy</h1>
-      <p>Home Base connects to your Buffer account to list your channels and save posts to your queue as drafts.</p>
+      <p>External Post Launch connects to your Buffer account to list your channels and save posts to your queue as drafts.</p>
       <ul>
         <li>We store your Buffer sign-in token in an encrypted cookie in your browser. We don&apos;t keep a database of users.</li>
         <li>We only request permission to read your account and channels and to create posts. We can&apos;t change your account settings.</li>
@@ -14,7 +14,7 @@ export default function Privacy() {
         <li>Nothing is published automatically. Every post is saved as a draft for you to review in Buffer.</li>
         <li>Disconnecting Buffer deletes the cookie. You can also revoke access any time in your Buffer settings.</li>
       </ul>
-      <p><Link href="/">Back to Home Base</Link></p>
+      <p><Link href="/">Back to External Post Launch</Link></p>
     </main>
   );
 }

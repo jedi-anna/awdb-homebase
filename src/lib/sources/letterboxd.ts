@@ -49,7 +49,7 @@ export async function fetchLetterboxdEntries(username: string): Promise<Letterbo
   if (!USERNAME.test(name)) throw new Error("That doesn't look like a Letterboxd username.");
 
   const res = await fetch(`https://letterboxd.com/${name}/rss/`, {
-    headers: { "User-Agent": "HomeBase/0.1 (RSS reader)", Accept: "application/rss+xml, text/xml" },
+    headers: { "User-Agent": "ExternalPostLaunch/0.1 (RSS reader)", Accept: "application/rss+xml, text/xml" },
     cache: "no-store",
     signal: AbortSignal.timeout(8000),
   });

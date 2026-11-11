@@ -188,7 +188,7 @@ export async function createDraft(token: string, draft: Draft): Promise<string> 
     mode: "addToQueue",
     schedulingType: "automatic",
     saveToDraft: true,
-    source: "homebase",
+    source: "external-post-launch",
     assets: draft.imageUrl ? [{ image: imageAsset(draft) }] : [],
   };
 

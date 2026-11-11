@@ -107,7 +107,7 @@ async function findBreweryInstagram(html: string, breweryName: string): Promise<
   if (!link || link.includes("..")) return undefined;
   try {
     const res = await fetch(new URL(link, "https://untappd.com"), {
-      headers: { "User-Agent": "HomeBase/0.1 (link preview)", Accept: "text/html" },
+      headers: { "User-Agent": "ExternalPostLaunch/0.1 (link preview)", Accept: "text/html" },
       cache: "no-store",
       signal: AbortSignal.timeout(6000),
     });
@@ -152,7 +152,7 @@ export async function fetchUntappdPreview(raw: string): Promise<UntappdPreview> 
 
   try {
     const res = await fetch(parsed.url, {
-      headers: { "User-Agent": "HomeBase/0.1 (link preview)", Accept: "text/html" },
+      headers: { "User-Agent": "ExternalPostLaunch/0.1 (link preview)", Accept: "text/html" },
       cache: "no-store",
       signal: AbortSignal.timeout(8000),
     });

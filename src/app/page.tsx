@@ -17,7 +17,7 @@ export default async function Home({
     <main>
       <header className="top">
         <div className="brand">
-          <span className="mark" aria-hidden>⌂</span> Home Base
+          <span className="mark" aria-hidden>↗</span> External Post Launch
         </div>
         {connected && (
           <form action="/api/auth/logout" method="post">
