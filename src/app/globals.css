@@ -1,13 +1,20 @@
 :root {
-  --bg: #f7f2e8;
-  --card: #fffdf8;
-  --ink: #2a2118;
-  --muted: #7a6a58;
-  --line: #e7dcc8;
-  --amber: #d98e04;
-  --amber-dark: #a86b00;
-  --ok: #2f7d4f;
-  --bad: #b3261e;
+  /* Matches the Buffer app's dark theme so the integration feels native. */
+  color-scheme: dark;
+  --bg: #171717;
+  --card: #1c1d1d;
+  --field: #212121;
+  --raised: #2a2b2b;
+  --ink: #eaeaea;
+  --muted: #9a9a9a;
+  --line: #2e2f2f;
+  --amber: #82be77;        /* accent (Buffer green) */
+  --amber-dark: #6fa865;   /* accent hover */
+  --on-accent: #10210d;
+  --accent-tint: #1f2a1d;
+  --ok: #82be77;
+  --bad: #f2867c;
+  --bad-tint: #3a1f1d;
   --radius: 14px;
 }
 
@@ -27,7 +34,7 @@ main {
   padding: 24px 20px 64px;
 }
 
-a { color: var(--amber-dark); }
+a { color: var(--amber); }
 
 .top {
   display: flex;
@@ -44,7 +51,7 @@ a { color: var(--amber-dark); }
   margin-right: 6px;
   border-radius: 8px;
   background: var(--amber);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 .hero h1 {
@@ -63,17 +70,17 @@ button, .button {
   border: 0;
   border-radius: 999px;
   padding: 11px 20px;
-  background: var(--ink);
-  color: #fff;
+  background: var(--amber);
+  color: var(--on-accent);
   font: inherit;
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
 }
-button:hover:not(:disabled), .button:hover { background: #000; }
+button:hover:not(:disabled), .button:hover { background: var(--amber-dark); }
 button:disabled { opacity: 0.45; cursor: not-allowed; }
-button.secondary { background: var(--amber); }
-button.secondary:hover:not(:disabled) { background: var(--amber-dark); }
+button.secondary { background: var(--raised); color: var(--ink); border: 1px solid var(--line); }
+button.secondary:hover:not(:disabled) { background: #333434; }
 button.link {
   background: none;
   color: var(--muted);
@@ -97,7 +104,7 @@ button.link {
   height: 26px;
   border-radius: 50%;
   background: var(--amber);
-  color: #fff;
+  color: var(--on-accent);
   font-size: 0.85rem;
 }
 
@@ -113,7 +120,7 @@ input, textarea {
   width: 100%;
   font: inherit;
   color: inherit;
-  background: #fff;
+  background: var(--field);
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 10px 12px;
@@ -138,7 +145,7 @@ textarea { resize: vertical; }
   border-radius: 10px;
   cursor: pointer;
 }
-.channel.on { border-color: var(--amber); background: #fff8ea; }
+.channel.on { border-color: var(--amber); background: var(--accent-tint); }
 .channel input { width: auto; }
 .channel img { width: 32px; height: 32px; border-radius: 50%; }
 .channel span { display: grid; }
@@ -152,7 +159,7 @@ textarea { resize: vertical; }
 .muted { color: var(--muted); }
 .ok { color: var(--ok); font-weight: 600; }
 .error { color: var(--bad); }
-.banner { background: #fdecea; padding: 12px 14px; border-radius: 10px; }
+.banner { background: var(--bad-tint); padding: 12px 14px; border-radius: 10px; }
 
 .prose { max-width: 640px; }
 .prose li { margin-bottom: 8px; }
@@ -161,19 +168,20 @@ footer { margin-top: 48px; font-size: 0.9rem; color: var(--muted); }
 
 .tabs { display: flex; gap: 6px; background: var(--line); padding: 4px; border-radius: 999px; width: fit-content; }
 .tab { background: transparent; color: var(--muted); padding: 8px 18px; }
-.tab:hover:not(:disabled) { background: rgba(255,255,255,0.5); }
-.tab.on, .tab.on:hover:not(:disabled) { background: var(--card); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+.tab:hover:not(:disabled) { background: rgba(255,255,255,0.06); }
+.tab.on, .tab.on:hover:not(:disabled) { background: var(--card); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,0.4); }
 
 .entries { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; margin-bottom: 14px; }
 .entry {
   display: flex; align-items: center; gap: 10px; text-align: left;
-  background: #fff; color: var(--ink); border: 1px solid var(--line); border-radius: 10px;
+  background: var(--field); color: var(--ink); border: 1px solid var(--line); border-radius: 10px;
   padding: 8px; font-weight: 400;
 }
-.entry:hover:not(:disabled) { background: #fff8ea; }
-.entry.on { border-color: var(--amber); background: #fff8ea; }
+.entry:hover:not(:disabled) { background: var(--accent-tint); }
+.entry.on { border-color: var(--amber); background: var(--accent-tint); }
 .entry img { width: 36px; height: 54px; object-fit: cover; border-radius: 4px; flex: none; }
 .entry span { display: grid; min-width: 0; }
 .entry strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .entry em { color: var(--muted); font-style: normal; font-size: 0.8rem; }
 .small { font-size: 0.85rem; margin: 6px 0 0; }
+button.link:hover:not(:disabled) { background: none; color: var(--ink); }
