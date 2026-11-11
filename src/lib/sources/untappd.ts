@@ -11,6 +11,7 @@ export interface UntappdPreview {
   rating?: number;
   notes?: string;
   mentions?: string[];
+  highlights?: string[];
   itemUrl: string;
   profileUrl?: string;
 }
@@ -65,6 +66,10 @@ function parseDrinkingTitle(title: string) {
 
 /** Full-size check-in photo hosted on Untappd's image CDN. */
 function findCheckinPhoto(html: string): string | undefined {
+  // The full-size original sits on the photo link as data-image.
+  const original = html.match(/class=["'][^"']*\bimage-big\b[^"']*["'][^>]*data-image=["'](https:\/\/[^"']+)["']/i)?.[1]
+    ?? html.match(/data-image=["'](https:\/\/[^"']+)["'][^>]*class=["'][^"']*\bimage-big\b/i)?.[1];
+  if (original) return decodeEntities(original);
   const re = /https:\/\/(?:images\.untp\.beer|untappd\.akamaized\.net)\/[^"'\s)]*photos?[^"'\s)]*\.(?:jpe?g|png|webp)/gi;
   const matches = [...new Set(html.match(re) ?? [])];
   // Skip thumbnails and avatars when a larger version is present.
@@ -82,7 +87,8 @@ function findRating(html: string): number | undefined {
 
 /** The text the user wrote on the check-in, if any. */
 function findComment(html: string): string | undefined {
-  const m = html.match(/<p[^>]*class=["'][^"']*comment-text[^"']*["'][^>]*>([\s\S]*?)<\/p>/i);
+  // <p class="comment"><abbr id="translate_...">the review</abbr></p>
+  const m = html.match(/<p[^>]*class=["'](?:[^"']*\s)?comment(?:-text)?(?:\s[^"']*)?["'][^>]*>([\s\S]*?)<\/p>/i);
   if (!m) return undefined;
   const text = decodeEntities(m[1].replace(/<[^>]+>/g, "")).replace(/\s+/g, " ").trim();
   return text || undefined;
@@ -115,6 +121,24 @@ async function findBreweryInstagram(html: string, breweryName: string): Promise<
     // Best effort only.
   }
   return undefined;
+}
+
+/** "Purchased From" venue on the check-in. */
+function findPurchasedFrom(html: string): string | undefined {
+  const start = html.search(/class=["']purchased["']/i);
+  if (start < 0) return undefined;
+  const section = html.slice(start, start + 2000);
+  const m = section.match(/<a[^>]+href=["']\/v\/[^"']+["'][^>]*>\s*([^<]+?)\s*<\/a>/i);
+  return m ? decodeEntities(m[1]).trim() : undefined;
+}
+
+/** Flavor Profile tags, e.g. Grapefruity, Hazy, Smooth. */
+function findFlavors(html: string): string[] {
+  const start = html.search(/class=["']flavor["']/i);
+  if (start < 0) return [];
+  const end = html.indexOf("</ul>", start);
+  const section = html.slice(start, end > start ? end : start + 2000);
+  return [...section.matchAll(/<span>\s*([^<]+?)\s*<\/span>/gi)].map((m) => decodeEntities(m[1])).slice(0, 8);
 }
 
 export async function fetchUntappdPreview(raw: string): Promise<UntappdPreview> {
@@ -150,6 +174,17 @@ export async function fetchUntappdPreview(raw: string): Promise<UntappdPreview> 
 
     const comment = findComment(html);
     if (comment) preview.notes = comment;
+    else {
+      // og:description repeats the comment; it's the "is drinking" line when there isn't one.
+      const desc = metaContent(html, "og:description");
+      if (desc && !/is drinking an? /i.test(desc)) preview.notes = desc.trim();
+    }
+
+    const venue = findPurchasedFrom(html);
+    if (venue && !preview.context) preview.context = venue;
+
+    const flavors = findFlavors(html);
+    if (flavors.length) preview.highlights = flavors;
 
     const brewery = preview.creator ? await findBreweryInstagram(html, preview.creator) : undefined;
     preview.mentions = [brewery, "untappd"].filter((h): h is string => Boolean(h));

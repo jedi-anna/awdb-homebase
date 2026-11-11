@@ -78,6 +78,7 @@ export default function Composer() {
         itemUrl: preview.itemUrl,
         profileUrl: preview.profileUrl ?? item.profileUrl,
         mentions: preview.mentions?.length ? preview.mentions : item.mentions,
+        highlights: preview.highlights,
       });
     } catch (e) {
       setError((e as Error).message);

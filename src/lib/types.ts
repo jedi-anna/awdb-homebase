@@ -23,6 +23,8 @@ export interface ActivityItem {
   context?: string;
   /** Instagram/Threads handles to tag, without the @ (e.g. the brewery and the platform). */
   mentions?: string[];
+  /** Short descriptors from the source, e.g. Untappd flavor tags. Used for framing and hashtags. */
+  highlights?: string[];
 }
 
 export interface Channel {

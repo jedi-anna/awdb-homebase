@@ -141,6 +141,7 @@ ${JSON.stringify(
     context: item.context,
     rating: item.rating != null ? `${item.rating}/${item.ratingMax ?? 5}` : undefined,
     reviewer_notes_for_tone_only: item.notes,
+    flavor_or_style_tags: item.highlights,
   },
   null,
   2,
