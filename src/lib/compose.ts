@@ -64,43 +64,57 @@ function trimToWord(text: string, max: number): string {
   return `${(lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).trimEnd()}…`;
 }
 
+/** Used when the review is too long to quote in full: point to it instead. */
+function fullReviewCta(item: ActivityItem, rules: ChannelRules): string {
+  const name = SOURCE_NAMES[item.source];
+  const what = item.source === "untappd" ? "check-in" : "review";
+  if (!rules.linksClickable) return `Read my full ${what} on ${name} (link in bio)`;
+  return `Read my full ${what} on ${name}: ${item.itemUrl ?? item.profileUrl}`;
+}
+
 /**
  * Builds the final post. The user's notes and rating are inserted by code, not
- * by the model, so they always appear exactly as written. If the post runs over
- * the channel limit, extras are dropped first (hashtags, closer, hook); the
- * notes are only shortened, with an ellipsis, as a last resort.
+ * by the model, so they always appear exactly as written. A review is either
+ * quoted in full or not at all: when it doesn't fit the channel, the post
+ * shares the basics (title, rating) and sends people to the full review on the
+ * source platform, which is the point of the product.
  */
 export function assemble(item: ActivityItem, service: string, framing: Framing): string {
   const rules = rulesFor(service);
-  const notes = item.notes?.trim() ? `"${item.notes.trim()}"` : null;
+  const fullNotes = item.notes?.trim() ? `"${item.notes.trim()}"` : null;
   const rating = ratingLine(item);
-  const cta = ctaLine(item, rules);
-  let { hook, closer } = framing;
   const handles = MENTION_SERVICES.has(service)
     ? [...new Set((item.mentions ?? []).map(cleanHandle).filter((h): h is string => Boolean(h)))]
     : [];
   const mentionLine = handles.length ? handles.map((h) => `@${h}`).join(" ") : "";
-  let tags = framing.hashtags.map((t) => `#${t.replace(/^#/, "").replace(/\s+/g, "")}`).join(" ");
+  const hashtags = framing.hashtags.map((t) => `#${t.replace(/^#/, "").replace(/\s+/g, "")}`).join(" ");
 
-  const build = (n: string | null) =>
-    [hook, [n, rating].filter(Boolean).join("\n"), closer, cta, [mentionLine, tags].filter(Boolean).join("\n")]
+  const build = (o: { notes: string | null; cta: string; hook: string; closer: string; tags: string }) =>
+    [o.hook, [o.notes, rating].filter(Boolean).join("\n"), o.closer, o.cta, [mentionLine, o.tags].filter(Boolean).join("\n")]
       .filter((part) => part && part.trim())
       .join("\n\n");
 
-  let text = build(notes);
-  if (text.length > rules.limit) { tags = ""; text = build(notes); }
-  if (text.length > rules.limit) { closer = ""; text = build(notes); }
-  if (text.length > rules.limit && notes) {
-    const room = rules.limit - (build("").length + 2);
-    if (room > 40) {
-      text = build(`"${trimToWord(item.notes!.trim(), room - 2)}"`);
-    }
+  // Try progressively leaner versions until one fits.
+  const attempts = (notes: string | null, cta: string) => [
+    { notes, cta, hook: framing.hook, closer: framing.closer, tags: hashtags },
+    { notes, cta, hook: framing.hook, closer: framing.closer, tags: "" },
+    { notes, cta, hook: framing.hook, closer: "", tags: "" },
+  ];
+
+  const candidates = [
+    ...attempts(fullNotes, ctaLine(item, rules)),
+    ...(fullNotes ? attempts(null, fullReviewCta(item, rules)) : []),
+  ];
+  for (const c of candidates) {
+    const text = build(c);
+    if (text.length <= rules.limit) return text;
   }
-  if (text.length > rules.limit) {
-    hook = trimToWord(hook, Math.max(20, hook.length - (text.length - rules.limit)));
-    text = build(notes);
-  }
-  return text.slice(0, rules.limit);
+
+  // Last resort: basics only, with a shortened opening line.
+  const lean = { notes: null, cta: fullNotes ? fullReviewCta(item, rules) : ctaLine(item, rules), hook: framing.hook, closer: "", tags: "" };
+  const over = build(lean).length - rules.limit;
+  lean.hook = trimToWord(framing.hook, Math.max(20, framing.hook.length - over));
+  return build(lean).slice(0, rules.limit);
 }
 
 function fallbackFraming(item: ActivityItem): Framing {
