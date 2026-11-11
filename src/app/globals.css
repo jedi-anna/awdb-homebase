@@ -199,3 +199,12 @@ button.link:hover:not(:disabled) { background: none; color: var(--ink); }
 .option em { color: var(--muted); font-style: normal; font-size: 0.8rem; }
 .delivery:disabled .option { opacity: 0.6; cursor: default; }
 .schedule { margin-top: 12px; max-width: 280px; }
+
+.tabs { flex-wrap: wrap; }
+.soon-pill {
+  margin-left: 6px; padding: 1px 7px; border-radius: 999px;
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.02em;
+  background: var(--accent-tint); color: var(--amber); vertical-align: 1px;
+}
+.teaser h2 { font-size: 1.3rem; }
+.teaser p { color: var(--muted); max-width: 60ch; }

@@ -80,12 +80,21 @@ function saveChannelPref(source: SourceId, ids: Set<string>) {
   }
 }
 
+// Marketplaces use the same engine: a listing is one more adapter.
+const COMING_SOON = [
+  { id: "depop", name: "Depop", pitch: "Your shop lives on Depop, but buyers are scrolling Instagram and TikTok. Turn listings into posts that send them straight to the item." },
+  { id: "vinted", name: "Vinted", pitch: "Turn Vinted listings into posts for Instagram, Threads and Bluesky, so followers see new pieces before anyone else snaps them up." },
+  { id: "etsy", name: "Etsy", pitch: "Etsy brings searchers, social brings fans. Turn new listings into scheduled posts that point fans to your shop." },
+] as const;
+type ComingSoon = (typeof COMING_SOON)[number];
+
 export default function Composer() {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [channelError, setChannelError] = useState<string | null>(null);
 
   const [source, setSource] = useState<SourceId>("untappd");
+  const [soon, setSoon] = useState<ComingSoon | null>(null);
   const [link, setLink] = useState("");
   const [lbUser, setLbUser] = useState("");
   const [entries, setEntries] = useState<(ActivityItem & { label: string })[]>([]);
@@ -217,12 +226,44 @@ export default function Composer() {
     <div className="composer">
       <div className="tabs" role="tablist">
         {(["untappd", "letterboxd"] as const).map((id) => (
-          <button key={id} role="tab" aria-selected={source === id} className={source === id ? "tab on" : "tab"} onClick={() => switchSource(id)}>
+          <button
+            key={id}
+            role="tab"
+            aria-selected={!soon && source === id}
+            className={!soon && source === id ? "tab on" : "tab"}
+            onClick={() => { setSoon(null); switchSource(id); }}
+          >
             {id === "untappd" ? "Untappd" : "Letterboxd"}
+          </button>
+        ))}
+        {COMING_SOON.map((m) => (
+          <button
+            key={m.id}
+            role="tab"
+            aria-selected={soon?.id === m.id}
+            className={soon?.id === m.id ? "tab on" : "tab"}
+            onClick={() => setSoon(m)}
+          >
+            {m.name} <span className="soon-pill">Soon</span>
           </button>
         ))}
       </div>
 
+      {soon && (
+        <section className="card teaser">
+          <h2>{soon.name} is coming soon</h2>
+          <p>{soon.pitch}</p>
+          <ul className="points">
+            <li><strong>Paste a listing,</strong> and the item, price, photos and your shop link fill in.</li>
+            <li><strong>Get a post per channel</strong> that sends buyers to the listing, not just your profile.</li>
+            <li><strong>Schedule drops</strong> the same way you schedule reviews today.</li>
+          </ul>
+          <p className="muted">Same engine as Untappd and Letterboxd: a new source is one adapter.</p>
+        </section>
+      )}
+
+      {!soon && (
+      <>
       <section className="card">
         <h2><span className="step">1</span> {L.heading}</h2>
         {source === "untappd" ? (
@@ -451,6 +492,9 @@ export default function Composer() {
             </p>
           )}
         </section>
+      )}
+
+      </>
       )}
 
       {error && <p className="error banner">{error}</p>}

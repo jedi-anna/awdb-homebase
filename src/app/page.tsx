@@ -37,7 +37,7 @@ export default async function Home({
           <ul className="points">
             <li><strong>Your words stay yours.</strong> Notes and ratings are posted exactly as you wrote them.</li>
             <li><strong>You decide when it posts.</strong> Save a draft to review in Buffer, add it to your queue, schedule it, or post now.</li>
-            <li><strong>Built for niche platforms.</strong> Untappd and Letterboxd today, with more to come.</li>
+            <li><strong>Built for niche platforms.</strong> Untappd and Letterboxd today. Depop, Vinted and Etsy are next.</li>
           </ul>
           {error && <p className="error">{error}</p>}
         </section>
