@@ -8,6 +8,8 @@ export interface UntappdPreview {
   creator?: string;
   context?: string;
   imageUrl?: string;
+  rating?: number;
+  notes?: string;
   itemUrl: string;
   profileUrl?: string;
 }
@@ -57,6 +59,34 @@ function parseDrinkingTitle(title: string) {
   return { title: m[1].trim(), creator: m[2].trim(), context: m[3]?.trim() };
 }
 
+// Untappd's markup isn't documented, so each of these is best effort and
+// returns undefined when it can't find a confident match.
+
+/** Full-size check-in photo hosted on Untappd's image CDN. */
+function findCheckinPhoto(html: string): string | undefined {
+  const re = /https:\/\/(?:images\.untp\.beer|untappd\.akamaized\.net)\/[^"'\s)]*photos?[^"'\s)]*\.(?:jpe?g|png|webp)/gi;
+  const matches = [...new Set(html.match(re) ?? [])];
+  // Skip thumbnails and avatars when a larger version is present.
+  const full = matches.filter((u) => !/(?:_100|_200|_thumb|avatar)/i.test(u));
+  return full[0] ?? matches[0];
+}
+
+/** Untappd renders ratings as caps with a data-rating attribute. */
+function findRating(html: string): number | undefined {
+  const m = html.match(/class=["'][^"']*\bcaps\b[^"']*["'][^>]*data-rating=["']([\d.]+)["']/i)
+    ?? html.match(/data-rating=["']([\d.]+)["'][^>]*class=["'][^"']*\bcaps\b/i);
+  const n = m ? Number(m[1]) : NaN;
+  return n > 0 && n <= 5 ? n : undefined;
+}
+
+/** The text the user wrote on the check-in, if any. */
+function findComment(html: string): string | undefined {
+  const m = html.match(/<p[^>]*class=["'][^"']*comment-text[^"']*["'][^>]*>([\s\S]*?)<\/p>/i);
+  if (!m) return undefined;
+  const text = decodeEntities(m[1].replace(/<[^>]+>/g, "")).replace(/\s+/g, " ").trim();
+  return text || undefined;
+}
+
 export async function fetchUntappdPreview(raw: string): Promise<UntappdPreview> {
   const parsed = parseUntappdUrl(raw);
   if (!parsed) throw new Error("That doesn't look like an untappd.com link.");
@@ -78,8 +108,18 @@ export async function fetchUntappdPreview(raw: string): Promise<UntappdPreview> 
     const ogTitle = metaContent(html, "og:title");
     if (ogTitle) Object.assign(preview, parseDrinkingTitle(ogTitle));
 
-    const image = metaContent(html, "og:image");
-    if (image?.startsWith("https://")) preview.imageUrl = image;
+    // Prefer the user's own photo. og:image is Untappd's branded share card,
+    // so it's only the fallback.
+    const photo = findCheckinPhoto(html);
+    const card = metaContent(html, "og:image");
+    if (photo) preview.imageUrl = photo;
+    else if (card?.startsWith("https://")) preview.imageUrl = card;
+
+    const rating = findRating(html);
+    if (rating != null) preview.rating = rating;
+
+    const comment = findComment(html);
+    if (comment) preview.notes = comment;
   } catch {
     // Network or parsing failure: return what we got from the URL alone.
   }

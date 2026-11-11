@@ -61,6 +61,8 @@ export default function Composer() {
         creator: preview.creator ?? item.creator,
         context: preview.context ?? item.context,
         imageUrl: preview.imageUrl ?? item.imageUrl,
+        rating: preview.rating ?? item.rating,
+        notes: item.notes?.trim() ? item.notes : preview.notes,
         itemUrl: preview.itemUrl,
         profileUrl: preview.profileUrl ?? item.profileUrl,
       });
