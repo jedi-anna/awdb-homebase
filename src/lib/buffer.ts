@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import { getSession } from "./session";
-import type { Channel, Draft } from "./types";
+import type { Channel, Delivery, Draft } from "./types";
 
 const AUTH_URL = "https://auth.buffer.com/auth";
 const TOKEN_URL = "https://auth.buffer.com/token";
@@ -180,14 +180,25 @@ const CREATE_POST = `
   }
 `;
 
-/** Saves a draft to the channel's Buffer queue. Nothing is published. */
-export async function createDraft(token: string, draft: Draft): Promise<string> {
+const SHARE_MODE = {
+  draft: "addToQueue",
+  queue: "addToQueue",
+  now: "shareNow",
+  schedule: "customScheduled",
+} as const;
+
+/**
+ * Creates the post in Buffer. "draft" saves it for review in Buffer; the other
+ * modes publish automatically: next open queue slot, right away, or at a set time.
+ */
+export async function createPost(token: string, draft: Draft, delivery: Delivery): Promise<string> {
   const input: Record<string, unknown> = {
     channelId: draft.channelId,
     text: draft.text,
-    mode: "addToQueue",
+    mode: SHARE_MODE[delivery.mode],
     schedulingType: "automatic",
-    saveToDraft: true,
+    saveToDraft: delivery.mode === "draft",
+    ...(delivery.mode === "schedule" ? { dueAt: delivery.at } : {}),
     source: "external-post-launch",
     assets: draft.imageUrl ? [{ image: imageAsset(draft) }] : [],
   };

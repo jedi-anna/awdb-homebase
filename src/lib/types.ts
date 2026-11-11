@@ -36,6 +36,13 @@ export interface Channel {
   isQueuePaused?: boolean;
 }
 
+/** What happens when the user sends: keep as a draft, add to the Buffer queue, publish now, or schedule. */
+export type Delivery =
+  | { mode: "draft" }
+  | { mode: "queue" }
+  | { mode: "now" }
+  | { mode: "schedule"; at: string };
+
 export interface Draft {
   channelId: string;
   service: string;

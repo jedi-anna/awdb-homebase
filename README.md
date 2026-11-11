@@ -18,12 +18,12 @@ People build real reputations on vertical platforms like Untappd, Letterboxd and
    - **Letterboxd:** enter your username. External Post Launch reads your public diary feed, and you pick an entry.
 3. **Tag the people behind it.** External Post Launch suggests tags (the brewery's Instagram, found on its Untappd page, plus @untappd or @letterboxd). Tags go in the caption on Instagram and Threads and on the photo on Instagram, so the post also appears on the brewery's Tagged tab. Handles are never guessed.
 4. **Pick channels.** External Post Launch writes a draft for each one, sized to its character limit and written in its voice.
-5. **Review and send.** Drafts land in your Buffer queue. Nothing posts automatically.
+5. **Review and choose when it goes out:** save as a draft to review in Buffer, add to your Buffer queue, schedule a date and time, or post now.
 
 ## Product principles
 
 - **Your words stay yours.** Notes and ratings are inserted by code, not by the model, so they always appear exactly as written. Claude only writes the framing around them (opening line, a question, hashtags).
-- **Drafts, not auto-posting.** Everything goes to Buffer as a draft for you to approve.
+- **You stay in control of timing.** Draft is the default; queue, schedule and post now are one click away for schedule-and-forget.
 - **Minimum permissions.** The app requests `account:read`, `posts:read`, `posts:write` and `offline_access`, nothing else.
 - **One shape for every source.** Each platform adapter converts activity into a single `ActivityItem` type (`src/lib/types.ts`). Everything downstream ignores where the data came from, so adding Letterboxd or Goodreads means writing one adapter.
 

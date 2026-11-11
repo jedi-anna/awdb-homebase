@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { ActivityItem, Channel, Draft, SourceId } from "@/lib/types";
+import type { ActivityItem, Channel, Delivery, Draft, SourceId } from "@/lib/types";
 
 const LIMITS: Record<string, number> = {
   instagram: 2200, threads: 500, bluesky: 300, twitter: 280, mastodon: 500, facebook: 5000, linkedin: 3000,
@@ -31,6 +31,30 @@ const LABELS = {
     photoHelp: "Instagram needs an image. The film poster fills in by default; swap in your own photo if you'd rather." },
 } as const;
 
+type DeliveryMode = Delivery["mode"];
+
+const DELIVERY_OPTIONS: { id: DeliveryMode; label: string; help: string }[] = [
+  { id: "draft", label: "Save as draft", help: "Review and schedule it in Buffer yourself." },
+  { id: "queue", label: "Add to queue", help: "Posts at your next open time slot in Buffer." },
+  { id: "schedule", label: "Schedule", help: "Pick the date and time." },
+  { id: "now", label: "Post now", help: "Publishes right away." },
+];
+
+const DONE_TEXT: Record<DeliveryMode, string> = {
+  draft: "Saved as a draft in Buffer.",
+  queue: "Added to your Buffer queue.",
+  schedule: "Scheduled in Buffer.",
+  now: "Sent to Buffer to publish now.",
+};
+
+/** Value for a datetime-local input, an hour from now in the user's time zone. */
+function defaultScheduleValue() {
+  const d = new Date(Date.now() + 60 * 60 * 1000);
+  d.setMinutes(0, 0, 0);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 export default function Composer() {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -43,6 +67,9 @@ export default function Composer() {
   const [item, setItem] = useState<ActivityItem>({ source: "untappd", title: "", profileUrl: "", ratingMax: 5, mentions: ["untappd"] });
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [results, setResults] = useState<Result[]>([]);
+  const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("draft");
+  const [scheduleAt, setScheduleAt] = useState(defaultScheduleValue);
+  const [sentMode, setSentMode] = useState<DeliveryMode>("draft");
   const [busy, setBusy] = useState<null | "preview" | "feed" | "drafts" | "send">(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -140,8 +167,16 @@ export default function Composer() {
     setBusy("send");
     setError(null);
     try {
-      const { results } = await postJson<{ results: Result[] }>("/api/send", { drafts });
-      setResults(results);
+      const delivery: Delivery =
+        deliveryMode === "schedule"
+          ? { mode: "schedule", at: new Date(scheduleAt).toISOString() }
+          : { mode: deliveryMode };
+      // On a retry, skip channels that already went through so nothing is posted twice.
+      const done = new Set(results.filter((r) => r.ok).map((r) => r.channelId));
+      const pending = drafts.filter((d) => !done.has(d.channelId));
+      const { results: fresh } = await postJson<{ results: Result[] }>("/api/send", { drafts: pending, delivery });
+      setSentMode(deliveryMode);
+      setResults([...results.filter((r) => r.ok), ...fresh]);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -314,7 +349,7 @@ export default function Composer() {
       {drafts.length > 0 && (
         <section className="card">
           <h2><span className="step">3</span> Review and send</h2>
-          <p className="muted">Your notes and rating are added word for word. Edit anything else.</p>
+          <p className="muted">Your notes and rating are added word for word. Edit anything else, then choose when it goes out.</p>
           {drafts.map((d, i) => {
             const ch = channelById(d.channelId);
             const limit = limitFor(d.service);
@@ -340,14 +375,54 @@ export default function Composer() {
                   <p className="muted small">Photo tags: {d.userTags.map((h) => `@${h}`).join(" ")}</p>
                 )}
                 {missingPhoto && <p className="error">Instagram needs a photo. Add a photo link above.</p>}
-                {result && (result.ok ? <p className="ok">Saved as a draft in Buffer.</p> : <p className="error">{result.error}</p>)}
+                {result && (result.ok ? <p className="ok">{DONE_TEXT[sentMode]}</p> : <p className="error">{result.error}</p>)}
               </div>
             );
           })}
-          <button onClick={send} disabled={busy !== null || sentOk}>
-            {busy === "send" ? "Sending…" : sentOk ? "Sent to Buffer" : "Send drafts to Buffer"}
+          <fieldset className="delivery" disabled={busy !== null || sentOk}>
+            <legend>When should it go out?</legend>
+            <div className="delivery-options">
+              {DELIVERY_OPTIONS.map((o) => (
+                <label key={o.id} className={deliveryMode === o.id ? "option on" : "option"}>
+                  <input
+                    type="radio"
+                    name="delivery"
+                    value={o.id}
+                    checked={deliveryMode === o.id}
+                    onChange={() => setDeliveryMode(o.id)}
+                  />
+                  <span>
+                    <strong>{o.label}</strong>
+                    <em>{o.help}</em>
+                  </span>
+                </label>
+              ))}
+            </div>
+            {deliveryMode === "schedule" && (
+              <label className="field schedule">
+                <span>Date and time (your time zone)</span>
+                <input type="datetime-local" value={scheduleAt} onChange={(e) => setScheduleAt(e.target.value)} />
+              </label>
+            )}
+          </fieldset>
+
+          <button onClick={send} disabled={busy !== null || sentOk || (deliveryMode === "schedule" && !scheduleAt)}>
+            {busy === "send"
+              ? "Sending…"
+              : sentOk
+                ? "Sent to Buffer"
+                : {
+                    draft: `Save ${drafts.length > 1 ? "drafts" : "draft"} to Buffer`,
+                    queue: "Add to Buffer queue",
+                    schedule: "Schedule in Buffer",
+                    now: `Post now to ${drafts.length} ${drafts.length > 1 ? "channels" : "channel"}`,
+                  }[deliveryMode]}
           </button>
-          {sentOk && <p className="ok">Done. Open Buffer to review and schedule them.</p>}
+          {sentOk && (
+            <p className="ok">
+              {sentMode === "draft" ? "Done. Open Buffer to review and schedule." : "Done. Buffer will take it from here."}
+            </p>
+          )}
         </section>
       )}
 
