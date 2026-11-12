@@ -309,6 +309,12 @@ export default function Composer() {
                 placeholder="https://untappd.com/user/you/checkin/123456789"
                 value={link}
                 onChange={(e) => setLink(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && link && busy === null) {
+                    e.preventDefault();
+                    fillFromLink();
+                  }
+                }}
               />
               <button className="secondary" onClick={fillFromLink} disabled={!link || busy !== null}>
                 {busy === "preview" ? "Reading…" : "Fill in"}
@@ -321,7 +327,17 @@ export default function Composer() {
             <label className="field">
               <span>Letterboxd username</span>
               <div className="row">
-                <input placeholder="e.g. yourusername" value={lbUser} onChange={(e) => setLbUser(e.target.value)} />
+                <input
+                  placeholder="e.g. yourusername"
+                  value={lbUser}
+                  onChange={(e) => setLbUser(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && lbUser && busy === null) {
+                      e.preventDefault();
+                      loadLetterboxd();
+                    }
+                  }}
+                />
                 <button className="secondary" onClick={loadLetterboxd} disabled={!lbUser || busy !== null}>
                   {busy === "feed" ? "Loading…" : "Load diary"}
                 </button>
