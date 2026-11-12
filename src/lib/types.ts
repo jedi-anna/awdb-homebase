@@ -25,6 +25,8 @@ export interface ActivityItem {
   mentions?: string[];
   /** Short descriptors from the source, e.g. Untappd flavor tags. Used for framing and hashtags. */
   highlights?: string[];
+  /** How it was served, e.g. Draft, Can, Bottle (Untappd). */
+  serving?: string;
 }
 
 export interface Channel {

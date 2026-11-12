@@ -12,6 +12,7 @@ export interface UntappdPreview {
   notes?: string;
   mentions?: string[];
   highlights?: string[];
+  serving?: string;
   /** Set when the page couldn't be read, so the user knows to fill in by hand. */
   warning?: string;
   itemUrl: string;
@@ -139,6 +140,12 @@ function findPurchasedFrom(html: string): string | undefined {
   return m ? decodeEntities(m[1]).trim() : undefined;
 }
 
+/** Serving style: <p class="serving"><img …><span>Draft </span></p> */
+function findServing(html: string): string | undefined {
+  const m = html.match(/<p[^>]*class=["']serving["'][^>]*>[\s\S]*?<span>\s*([^<]+?)\s*<\/span>/i);
+  return m ? decodeEntities(m[1]).trim() : undefined;
+}
+
 /** Flavor Profile tags, e.g. Grapefruity, Hazy, Smooth. */
 function findFlavors(html: string): string[] {
   const start = html.search(/class=["']flavor["']/i);
@@ -197,6 +204,9 @@ export async function fetchUntappdPreview(raw: string): Promise<UntappdPreview> 
 
     const flavors = findFlavors(html);
     if (flavors.length) preview.highlights = flavors;
+
+    const serving = findServing(html);
+    if (serving) preview.serving = serving;
 
     const brewery = preview.creator ? await findBreweryInstagram(html, preview.creator) : undefined;
     preview.mentions = [brewery, "untappd"].filter((h): h is string => Boolean(h));

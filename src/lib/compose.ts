@@ -136,6 +136,7 @@ function fallbackFraming(item: ActivityItem): Framing {
 
 const SYSTEM = `You write short social media framing for someone sharing their own reviews from a niche platform.
 You never quote, paraphrase, or invent the reviewer's opinions or tasting notes; their notes and rating are added separately, verbatim.
+Only state facts given in the data. Never invent details such as how a drink was served (bottle, can, draft), where it was, or who they were with. If a detail isn't given, leave it out.
 Write in first person, casual and specific, like a real person posting. No em dashes. No filler like "Cheers!" unless it fits. No emojis unless natural; at most one.
 Return only JSON.`;
 
@@ -156,6 +157,7 @@ ${JSON.stringify(
     rating: item.rating != null ? `${item.rating}/${item.ratingMax ?? 5}` : undefined,
     reviewer_notes_for_tone_only: item.notes,
     flavor_or_style_tags: item.highlights,
+    served: item.serving,
   },
   null,
   2,

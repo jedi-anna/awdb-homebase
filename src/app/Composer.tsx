@@ -173,6 +173,7 @@ export default function Composer() {
         profileUrl: preview.profileUrl ?? item.profileUrl,
         mentions: preview.mentions?.length ? preview.mentions : item.mentions,
         highlights: preview.highlights,
+        serving: preview.serving ?? item.serving,
       });
     } catch (e) {
       setError((e as Error).message);
@@ -367,6 +368,24 @@ export default function Composer() {
             <span>{L.context}</span>
             <input value={item.context ?? ""} onChange={(e) => update({ context: e.target.value })} placeholder={L.contextPh} />
           </label>
+          {source === "untappd" && (
+            <label className="field">
+              <span>Served (optional)</span>
+              <input
+                list="serving-styles"
+                value={item.serving ?? ""}
+                onChange={(e) => update({ serving: e.target.value || undefined })}
+                placeholder="e.g. Draft, Can, Bottle"
+              />
+              <datalist id="serving-styles">
+                <option value="Draft" />
+                <option value="Can" />
+                <option value="Bottle" />
+                <option value="Crowler" />
+                <option value="Cask" />
+              </datalist>
+            </label>
+          )}
         </div>
 
         <label className="field">
