@@ -167,10 +167,9 @@ export async function fetchUntappdPreview(raw: string): Promise<UntappdPreview> 
     const ogTitle = metaContent(html, "og:title");
     if (ogTitle) Object.assign(preview, parseDrinkingTitle(ogTitle));
 
-    // Prefer the user's own photo. og:image is Untappd's branded share card,
-    // so it's only the fallback.
+    // Only the user's own photo. Untappd's og:image share card is Untappd's
+    // graphic, so it's never used.
     const photo = findCheckinPhoto(html);
-    // Untappd's share card is Untappd's own graphic, so it's never used.
     if (photo) preview.imageUrl = photo;
 
     const rating = findRating(html);
