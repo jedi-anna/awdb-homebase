@@ -39,7 +39,6 @@ export function authorizeUrl(challenge: string, state: string): string {
     state,
     code_challenge: challenge,
     code_challenge_method: "S256",
-    prompt: "consent",
   });
   return `${AUTH_URL}?${params}`;
 }
