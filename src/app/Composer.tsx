@@ -158,7 +158,8 @@ export default function Composer() {
     setBusy("preview");
     setError(null);
     try {
-      const { preview } = await postJson<{ preview: Partial<ActivityItem> }>("/api/untappd/preview", { url: link });
+      const { preview } = await postJson<{ preview: Partial<ActivityItem> & { warning?: string } }>("/api/untappd/preview", { url: link });
+      if (preview.warning) setError(preview.warning);
       update({
         title: preview.title ?? item.title,
         creator: preview.creator ?? item.creator,

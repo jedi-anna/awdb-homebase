@@ -12,6 +12,8 @@ export interface UntappdPreview {
   notes?: string;
   mentions?: string[];
   highlights?: string[];
+  /** Set when the page couldn't be read, so the user knows to fill in by hand. */
+  warning?: string;
   itemUrl: string;
   profileUrl?: string;
 }
@@ -161,7 +163,14 @@ export async function fetchUntappdPreview(raw: string): Promise<UntappdPreview> 
       cache: "no-store",
       signal: AbortSignal.timeout(8000),
     });
-    if (!res.ok) return preview;
+    if (!res.ok) {
+      console.warn(`Untappd preview failed: ${res.status} for ${parsed.url.pathname}`);
+      preview.warning =
+        res.status === 404
+          ? "Untappd couldn't find that check-in. Check the link, or fill in the details by hand."
+          : `Untappd didn't share the page right now (status ${res.status}). Fill in the details by hand, or try again in a minute.`;
+      return preview;
+    }
     const html = await res.text();
 
     const ogTitle = metaContent(html, "og:title");
@@ -191,8 +200,12 @@ export async function fetchUntappdPreview(raw: string): Promise<UntappdPreview> 
 
     const brewery = preview.creator ? await findBreweryInstagram(html, preview.creator) : undefined;
     preview.mentions = [brewery, "untappd"].filter((h): h is string => Boolean(h));
-  } catch {
-    // Network or parsing failure: return what we got from the URL alone.
+  } catch (err) {
+    console.warn("Untappd preview error", err);
+    preview.warning = "Untappd took too long to respond. Fill in the details by hand, or try again in a minute.";
+  }
+  if (!preview.warning && !preview.title) {
+    preview.warning = "Couldn't read the details from that page. Fill them in by hand.";
   }
   return preview;
 }
