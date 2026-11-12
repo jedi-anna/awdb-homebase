@@ -170,9 +170,8 @@ export async function fetchUntappdPreview(raw: string): Promise<UntappdPreview> 
     // Prefer the user's own photo. og:image is Untappd's branded share card,
     // so it's only the fallback.
     const photo = findCheckinPhoto(html);
-    const card = metaContent(html, "og:image");
+    // Untappd's share card is Untappd's own graphic, so it's never used.
     if (photo) preview.imageUrl = photo;
-    else if (card?.startsWith("https://")) preview.imageUrl = card;
 
     const rating = findRating(html);
     if (rating != null) preview.rating = rating;

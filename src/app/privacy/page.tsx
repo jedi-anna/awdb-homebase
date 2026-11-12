@@ -11,7 +11,9 @@ export default function Privacy() {
         <li>We store your Buffer sign-in token in an encrypted cookie in your browser. We don&apos;t keep a database of users.</li>
         <li>We only request permission to read your account and channels and to create posts. We can&apos;t change your account settings.</li>
         <li>When you write drafts, the details of your check-in are sent to Anthropic&apos;s Claude API to write the framing text. Your notes are used only to match tone.</li>
-        <li>Nothing is published automatically. Every post is saved as a draft for you to review in Buffer.</li>
+        <li>When you click Fill in or Load diary, the app reads that one public Untappd check-in page or Letterboxd feed on your behalf. It doesn&apos;t crawl or store anything from those sites.</li>
+        <li>Nothing is published unless you choose to. You pick whether each post is saved as a draft, added to your Buffer queue, scheduled, or posted now.</li>
+        <li>Your channel choices for each source are remembered in your own browser only.</li>
         <li>Disconnecting Buffer deletes the cookie. You can also revoke access any time in your Buffer settings.</li>
       </ul>
       <p><Link href="/">Back to External Post Launch</Link></p>

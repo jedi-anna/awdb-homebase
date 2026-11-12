@@ -49,6 +49,8 @@ export default async function Home({
       )}
 
       <footer>
+        Built on the Buffer API. Not an official Buffer product, and not affiliated with Untappd or Letterboxd.
+        {" · "}
         <a href="/privacy">Privacy</a>
       </footer>
     </main>
