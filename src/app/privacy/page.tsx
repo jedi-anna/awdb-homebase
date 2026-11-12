@@ -14,6 +14,7 @@ export default function Privacy() {
         <li>When you click Fill in or Load diary, the app reads that one public Untappd check-in page or Letterboxd feed on your behalf. It doesn&apos;t crawl or store anything from those sites.</li>
         <li>Nothing is published unless you choose to. You pick whether each post is saved as a draft, added to your Buffer queue, scheduled, or posted now.</li>
         <li>Your channel choices for each source are remembered in your own browser only.</li>
+        <li>Photos you upload are stored at a hard-to-guess public link so Buffer can attach them to your post, and are deleted automatically after 60 days.</li>
         <li>Disconnecting Buffer deletes the cookie. You can also revoke access any time in your Buffer settings.</li>
       </ul>
       <p><Link href="/">Back to External Post Launch</Link></p>

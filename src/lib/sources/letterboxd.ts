@@ -33,15 +33,17 @@ function decode(s: string): string {
     .replace(/&gt;/g, ">");
 }
 
-/** The description holds a poster <img> plus the review in <p> tags. */
+/**
+ * The description holds a poster <img> plus the review in <p> tags. Only the
+ * review is used: posters are the studios' artwork, so they're never posted.
+ */
 function parseDescription(html: string) {
-  const poster = html.match(/<img[^>]+src=["']([^"']+)["']/i)?.[1];
   const paragraphs = [...html.matchAll(/<p>([\s\S]*?)<\/p>/gi)]
     .map((m) => decode(m[1].replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "")).trim())
     .filter(Boolean);
   // Entries without a written review only say "Watched on <date>."
   const review = paragraphs.filter((p) => !/^Watched on /i.test(p)).join("\n\n");
-  return { poster, review: review || undefined };
+  return { review: review || undefined };
 }
 
 export async function fetchLetterboxdEntries(username: string): Promise<LetterboxdEntry[]> {
@@ -68,7 +70,7 @@ export async function fetchLetterboxdEntries(username: string): Promise<Letterbo
     const ratingRaw = tag(item, "letterboxd:memberRating");
     const watched = tag(item, "letterboxd:watchedDate");
     const rewatch = tag(item, "letterboxd:rewatch") === "Yes";
-    const { poster, review } = parseDescription(tag(item, "description") ?? "");
+    const { review } = parseDescription(tag(item, "description") ?? "");
     const rating = ratingRaw ? Number(ratingRaw) : undefined;
 
     const watchedLabel = watched
@@ -82,7 +84,6 @@ export async function fetchLetterboxdEntries(username: string): Promise<Letterbo
       rating: rating && rating > 0 ? rating : undefined,
       ratingMax: 5,
       notes: review,
-      imageUrl: poster?.startsWith("https://") ? poster : undefined,
       itemUrl: tag(item, "link"),
       profileUrl: profileUrlFor(name),
       context: rewatch ? "a rewatch" : undefined,

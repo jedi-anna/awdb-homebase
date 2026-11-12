@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { upload } from "@vercel/blob/client";
 import type { ActivityItem, Channel, Delivery, Draft, SourceId } from "@/lib/types";
 
 const LIMITS: Record<string, number> = {
@@ -23,12 +24,12 @@ async function postJson<T>(url: string, body: unknown): Promise<T> {
 }
 
 const LABELS = {
-  untappd: { heading: "Your check-in", title: "Beer", creator: "Brewery", context: "Where (optional)", photo: "Photo link", profile: "Your Untappd profile",
+  untappd: { heading: "Your check-in", title: "Beer", creator: "Brewery", context: "Where (optional)", photo: "Photo", profile: "Your Untappd profile",
     titlePh: "e.g. Miller Lite", creatorPh: "e.g. Miller Brewing Company", contextPh: "e.g. your local bar", profilePh: "https://untappd.com/user/you",
-    photoHelp: "Instagram needs a photo. On Untappd, right-click your photo and copy the image address." },
-  letterboxd: { heading: "Your review", title: "Film", creator: "Year", context: "Context (optional)", photo: "Image link", profile: "Your Letterboxd profile",
+    photoHelp: "Fill in uses your check-in photo. Instagram needs one; X, Threads and Bluesky can go text only." },
+  letterboxd: { heading: "Your review", title: "Film", creator: "Year", context: "Context (optional)", photo: "Your photo (optional)", profile: "Your Letterboxd profile",
     titlePh: "e.g. The Godfather", creatorPh: "e.g. 1972", contextPh: "e.g. a rewatch, opening night", profilePh: "https://letterboxd.com/you/",
-    photoHelp: "Instagram needs an image. The film poster fills in by default; swap in your own photo if you'd rather." },
+    photoHelp: "A ticket stub, your screen, the theater. Instagram needs one; X, Threads and Bluesky can go text only." },
 } as const;
 
 type DeliveryMode = Delivery["mode"];
@@ -104,6 +105,9 @@ export default function Composer() {
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("draft");
   const [scheduleAt, setScheduleAt] = useState(defaultScheduleValue);
   const [sentMode, setSentMode] = useState<DeliveryMode>("draft");
+  const [uploadEnabled, setUploadEnabled] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState<null | "preview" | "feed" | "drafts" | "send">(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -117,6 +121,32 @@ export default function Composer() {
       })
       .catch((e) => setChannelError(e.message));
   }, []);
+
+  useEffect(() => {
+    fetch("/api/upload")
+      .then((r) => r.json())
+      .then((d) => setUploadEnabled(Boolean(d.enabled)))
+      .catch(() => setUploadEnabled(false));
+  }, []);
+
+  async function uploadPhoto(file: File) {
+    setUploading(true);
+    setError(null);
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const blob = await upload(`photos/${source}.${ext}`, file, {
+        access: "public",
+        handleUploadUrl: "/api/upload",
+        contentType: file.type,
+      });
+      update({ imageUrl: blob.url });
+    } catch (e) {
+      setError(`Photo upload failed: ${(e as Error).message}`);
+    } finally {
+      setUploading(false);
+      if (fileInput.current) fileInput.current.value = "";
+    }
+  }
 
   const update = (patch: Partial<ActivityItem>) => {
     setItem((prev) => ({ ...prev, ...patch }));
@@ -302,8 +332,6 @@ export default function Composer() {
                     className={item.itemUrl === e.itemUrl ? "entry on" : "entry"}
                     onClick={() => pickEntry(e)}
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    {e.imageUrl && <img src={e.imageUrl} alt="" />}
                     <span>
                       <strong>{e.title}</strong>
                       <em>{[e.creator, e.rating != null ? `${e.rating}/5` : null, e.label].filter(Boolean).join(" · ")}</em>
@@ -348,16 +376,42 @@ export default function Composer() {
           />
         </label>
 
-        <div className="grid">
-          <label className="field">
-            <span>{L.photo}</span>
-            <input type="url" value={item.imageUrl ?? ""} onChange={(e) => update({ imageUrl: e.target.value || undefined })} placeholder="https://…" />
-            <small>{L.photoHelp}</small>
-          </label>
-          <label className="field">
-            <span>{L.profile}</span>
-            <input type="url" value={item.profileUrl} onChange={(e) => update({ profileUrl: e.target.value })} placeholder={L.profilePh} />
-          </label>
+        <label className="field">
+          <span>{L.profile}</span>
+          <input type="url" value={item.profileUrl} onChange={(e) => update({ profileUrl: e.target.value })} placeholder={L.profilePh} />
+        </label>
+
+        <div className="field">
+          <span>{L.photo}</span>
+          <div className="row">
+            {uploadEnabled && (
+              <>
+                <input
+                  ref={fileInput}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  hidden
+                  onChange={(e) => e.target.files?.[0] && uploadPhoto(e.target.files[0])}
+                />
+                <button type="button" className="secondary" disabled={uploading} onClick={() => fileInput.current?.click()}>
+                  {uploading ? "Uploading…" : item.imageUrl ? "Replace photo" : "Upload photo"}
+                </button>
+              </>
+            )}
+            <input
+              type="url"
+              aria-label="Photo link"
+              value={item.imageUrl ?? ""}
+              onChange={(e) => update({ imageUrl: e.target.value || undefined })}
+              placeholder={uploadEnabled ? "or paste a link to a photo" : "Paste a link to a photo"}
+            />
+            {item.imageUrl && (
+              <button type="button" className="secondary" onClick={() => update({ imageUrl: undefined })}>
+                Remove
+              </button>
+            )}
+          </div>
+          <small>{L.photoHelp}</small>
         </div>
         <label className="field">
           <span>Tag accounts</span>

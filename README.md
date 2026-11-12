@@ -52,7 +52,6 @@ Next.js (App Router) on Vercel, Buffer GraphQL API, Claude API. No database: the
 
 ## Roadmap
 
-- Photo upload instead of pasting an image link
 - Metrics view: which post formats send the most people back to your profile
 - More sources: Goodreads, Strava
 - Marketplaces (Depop, Vinted and Etsy tabs are in the app as "coming soon"): turn listings into posts that send buyers to the item
