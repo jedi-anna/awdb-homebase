@@ -33,7 +33,7 @@ export default async function Home({
         <section className="hero">
           <h1>Your reviews live on niche platforms. Your audience doesn&apos;t.</h1>
           <p>
-            Turn what you share on apps like Untappd and Letterboxd into native posts for Instagram, Threads and Bluesky, sent through Buffer.
+            Turn what you share on other platforms into mainstream posts for Instagram, Threads and Bluesky, sent through Buffer.
             Every post points people back to your profile, so the community you built there keeps growing.
           </p>
           <a className="button" href="/api/auth/login">Connect Buffer</a>
