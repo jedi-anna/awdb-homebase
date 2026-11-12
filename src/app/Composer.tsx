@@ -103,7 +103,9 @@ export default function Composer() {
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [results, setResults] = useState<Result[]>([]);
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("draft");
-  const [scheduleAt, setScheduleAt] = useState(defaultScheduleValue);
+  // Filled in when Schedule is picked, not during render: the server has no
+  // business guessing the user's clock, and Next.js rejects Date.now() while prerendering.
+  const [scheduleAt, setScheduleAt] = useState("");
   const [sentMode, setSentMode] = useState<DeliveryMode>("draft");
   const [uploadEnabled, setUploadEnabled] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -512,7 +514,10 @@ export default function Composer() {
                     name="delivery"
                     value={o.id}
                     checked={deliveryMode === o.id}
-                    onChange={() => setDeliveryMode(o.id)}
+                    onChange={() => {
+                      setDeliveryMode(o.id);
+                      if (o.id === "schedule" && !scheduleAt) setScheduleAt(defaultScheduleValue());
+                    }}
                   />
                   <span>
                     <strong>{o.label}</strong>

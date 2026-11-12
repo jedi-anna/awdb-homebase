@@ -202,7 +202,7 @@ export async function fetchUntappdPreview(raw: string): Promise<UntappdPreview> 
     preview.mentions = [brewery, "untappd"].filter((h): h is string => Boolean(h));
   } catch (err) {
     console.warn("Untappd preview error", err);
-    preview.warning = "Untappd took too long to respond. Fill in the details by hand, or try again in a minute.";
+    preview.warning = "Untappd didn't respond. Fill in the details by hand, or try again in a minute.";
   }
   if (!preview.warning && !preview.title) {
     preview.warning = "Couldn't read the details from that page. Fill them in by hand.";

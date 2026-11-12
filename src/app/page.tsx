@@ -1,5 +1,6 @@
 import Composer from "./Composer";
 import { getSession } from "@/lib/session";
+import { connection } from "next/server";
 
 // Depends on the visitor's session cookie, so render per request.
 export const instant = false;
@@ -9,6 +10,8 @@ export default async function Home({
 }: {
   searchParams: Promise<{ error?: string }>;
 }) {
+  // Session checks use the current time, so this page only renders at request time.
+  await connection();
   const { error } = await searchParams;
   // Server Components can't write cookies, so token refresh happens in the API routes.
   const connected = Boolean((await getSession()).accessToken);
