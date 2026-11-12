@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "External Post Launch",
-  description: "Turn your Untappd check-ins into Buffer drafts that send people back to your profile.",
+  description: "Turn reviews from niche platforms into social posts, sent through Buffer, that bring people back to your profile.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
